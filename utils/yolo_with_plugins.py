@@ -145,6 +145,7 @@ class HostDeviceMem(object):
 
 
 def allocate_buffers(engine, grid_sizes):
+    # cuda.Context.attach()
     """Allocates all host/device in/out buffers required for an engine."""
     inputs = []
     outputs = []

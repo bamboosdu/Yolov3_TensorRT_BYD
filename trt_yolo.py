@@ -13,6 +13,9 @@ import cv2
 import pycuda.autoinit  # This is needed for initializing CUDA driver
 import numpy as np
 
+from multiprocessing import Process
+import multiprocessing
+
 from utils.yolo_classes import get_cls_dict
 from utils.camera import add_camera_args, Camera
 from utils.display import open_window, set_display, show_fps
@@ -88,7 +91,7 @@ def loop_and_detect(cam, trt_yolo, conf_th, vis):
 
 
 
-def main():
+def yolo_detection():
     args = parse_args()
     """
     config  assert
@@ -137,7 +140,22 @@ def main():
 
     cam.release()
     # cv2.destroyAllWindows()
+    print("Hi!")
 
+
+def run_proc(name):
+    print('⼦进程运⾏中，name= %s ,pid=%d...' % (name, os.getpid()))
+
+class TestProcess(multiprocessing.Process):
+    def __init__(self):
+        multiprocessing.Process.__init__(self)
+    def run(self):
+        print('⼦进程运⾏中')
+        yolo_detection()
+        print('⼦进程结束')
 
 if __name__ == '__main__':
-    main()
+    # yolo_detection()
+    t=TestProcess()
+    t.daemo=True
+    t.run()
