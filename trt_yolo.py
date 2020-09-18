@@ -23,11 +23,15 @@ from utils.visualization import BBoxVisualization
 
 from utils.yolo_with_plugins import TrtYOLO
 
+import pycuda.driver as cuda
+import pycuda.autoinit
+
 dic_class={0:'insulator'}
 
 WINDOW_NAME = 'TrtYOLODemo'
 
-
+# os.environ[“CUDA_VISIBLE_DEVICES”]=“0”
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 def parse_args():
     """Parse input arguments."""
     desc = ('Capture and display live camera video, while doing '
@@ -92,6 +96,8 @@ def loop_and_detect(cam, trt_yolo, conf_th, vis):
 
 
 def yolo_detection():
+    # dev = cuda.Device(0)
+    # ctx = dev.make_context()
     args = parse_args()
     """
     config  assert
@@ -141,21 +147,32 @@ def yolo_detection():
     cam.release()
     # cv2.destroyAllWindows()
     print("Hi!")
+    # ctx.pop()
+    # del ctx
 
 
-def run_proc(name):
-    print('⼦进程运⾏中，name= %s ,pid=%d...' % (name, os.getpid()))
+
 
 class TestProcess(multiprocessing.Process):
     def __init__(self):
         multiprocessing.Process.__init__(self)
+        # self.ctx
+
     def run(self):
+
         print('⼦进程运⾏中')
         yolo_detection()
         print('⼦进程结束')
 
+
 if __name__ == '__main__':
+
     # yolo_detection()
+
+    # print(ctx)
+    multiprocessing.set_start_method('spawn')
     t=TestProcess()
+
     t.daemo=True
-    t.run()
+    t.start()
+

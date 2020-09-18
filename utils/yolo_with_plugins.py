@@ -233,6 +233,7 @@ class TrtYOLO(object):
 
     def _load_engine(self):
         TRTbin = 'yolo/%s.trt' % self.model
+
         with open(TRTbin, 'rb') as f, trt.Runtime(self.trt_logger) as runtime:
             return runtime.deserialize_cuda_engine(f.read())
 
@@ -242,6 +243,7 @@ class TrtYOLO(object):
         self.input_shape = input_shape
         self.category_num = category_num
         self.cuda_ctx = cuda_ctx
+        # print(self.cuda_ctx)
         if self.cuda_ctx:
             self.cuda_ctx.push()
 
@@ -249,7 +251,7 @@ class TrtYOLO(object):
                                          else do_inference_v2
         self.trt_logger = trt.Logger(trt.Logger.INFO)
         self.engine = self._load_engine()
-
+        print("load engine")
         try:
             self.context = self.engine.create_execution_context()
             grid_sizes = get_yolo_grid_sizes(

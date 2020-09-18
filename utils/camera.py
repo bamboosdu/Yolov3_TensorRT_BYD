@@ -162,10 +162,12 @@ class Camera():
             # print("handls:\n",self.img_handle)
             if self.img_handle is not None:
                 if self.do_resize:
+                    print("I am resizing!")
                     self.img_handle = cv2.resize(
                         self.img_handle, (a.width, a.height))
                 self.is_opened = True
                 self.img_height, self.img_width, _ = self.img_handle.shape
+                print(self.img_height,self.img_width)
         elif a.video:
             logging.info('Camera: using a video file %s' % a.video)
             self.video_file = a.video
