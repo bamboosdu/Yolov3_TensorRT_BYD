@@ -56,6 +56,8 @@ import argparse
 
 import tensorrt as trt
 
+import sys
+sys.path.append("..")
 from plugins import add_yolo_plugins
 
 

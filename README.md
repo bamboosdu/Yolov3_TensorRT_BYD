@@ -43,4 +43,7 @@ bash onnx2trt.sh
 python3 trt_yolo.py
 ```
 
-
+Run on video
+```
+python3 trt_yolo_with_screen.py --video /home/zq/Videos/20201022.flv -m  yolov3-416
+```

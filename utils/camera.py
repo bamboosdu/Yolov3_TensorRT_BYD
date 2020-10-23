@@ -24,7 +24,7 @@ USB_GSTREAMER = False
 
 def add_camera_args(parser):
     """Add parser augument for camera options."""
-    parser.add_argument('--image', type=str, default='/home/iking/zq/git-space/tensorrt_test/myData/frameimage1.jpg',
+    parser.add_argument('--image', type=str, default=None,
                         help='image file name, e.g. dog.jpg')
     parser.add_argument('--video', type=str, default=None,
                         help='video file name, e.g. traffic.mp4')

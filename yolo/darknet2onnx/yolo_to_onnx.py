@@ -61,6 +61,7 @@ import numpy as np
 import onnx
 from onnx import helper, TensorProto
 
+sys.path.append("..")
 from plugins import verify_classes, get_input_wh
 
 

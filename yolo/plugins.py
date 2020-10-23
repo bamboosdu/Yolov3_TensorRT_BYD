@@ -3,14 +3,16 @@
 I referenced the code from https://github.com/dongfangduoshou123/YoloV3-TensorRT/blob/master/seralizeEngineFromPythonAPI.py
 """
 
-
+import sys
 import ctypes
 
 import numpy as np
 import tensorrt as trt
 
+
+
 try:
-    ctypes.cdll.LoadLibrary('../plugins/libyolo_layer.so')
+    ctypes.cdll.LoadLibrary('../../plugins/libyolo_layer.so')
 except OSError as e:
     raise SystemExit('ERROR: failed to load ../plugins/libyolo_layer.so.  '
                      'Did you forget to do a "make" in the "../plugins/" '
