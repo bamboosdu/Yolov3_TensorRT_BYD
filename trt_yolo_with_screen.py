@@ -9,6 +9,7 @@ import argparse
 
 import cv2
 import pycuda.autoinit  # This is needed for initializing CUDA driver
+import numpy as np
 
 from utils.yolo_classes import get_cls_dict
 from utils.camera import add_camera_args, Camera
@@ -17,6 +18,12 @@ from utils.visualization import BBoxVisualization
 
 from utils.yolo_with_plugins import TrtYOLO
 
+#kalman filter
+from utils import preprocessing
+from deep_sort.detection import Detection
+from deep_sort.tracker import Tracker
+from deep_sort import nn_matching
+from deep_sort.sort import *
 
 WINDOW_NAME = 'TrtYOLODemo'
 
@@ -54,9 +61,35 @@ def loop_and_detect(cam, trt_yolo, conf_th, vis):
     """
     full_scrn = False
     fps = 0.0
+    
     tic = time.time()
+    
+    """
+    Video save
+    """
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('result_3.avi', fourcc, 50.0, (1024, 768), True)
+    out = cv2.VideoWriter('result_3.avi', fourcc, 50.0, (1920, 1080), True)
+    
+    
+    """
+    Initialize tracker
+    --max_cosine_distance : float
+        Gating threshold for cosine distance metric (object appearance).
+    --nn_budget : Optional[int]
+        Maximum size of the appearance descriptor gallery. If None, no budget
+        is enforced.
+    """
+    # max_cosine_distance=0.2
+    # nn_budget=100
+    # metric = nn_matching.NearestNeighborDistanceMetric(
+    #     "cosine", max_cosine_distance, nn_budget)
+    # print("Metric is :",metric)
+    # tracker = Tracker(metric)
+    # results = []
+    mot_tracker=Sort(max_age=50, 
+                       min_hits=2,
+                       iou_threshold=0.3)
+    
     while True:
         if cv2.getWindowProperty(WINDOW_NAME, 0) < 0:
             break
@@ -65,7 +98,88 @@ def loop_and_detect(cam, trt_yolo, conf_th, vis):
         if img is None:
             break
         boxes, confs, clss = trt_yolo.detect(img, conf_th)
-        print("BBOX:",boxes)
+        print("boxes:",boxes)
+        if 0==len(boxes):
+            boxes=[[0,0,0,0]]
+            confs=[0]
+        dets=[]
+        for i in range(len(boxes)):
+            dets.append(np.append(np.asarray(boxes[i],dtype=np.float),confs[i]))
+        dets_array=np.array(dets)
+        # print(dets_array)
+        # print(dets_array.shape)
+        # print(dets_array.ndim)
+        track_bbs_ids = mot_tracker.update(dets_array)
+        print("After pridiction:",track_bbs_ids)
+        track_bbs_ids=[track_bb_id[:4] for track_bb_id in track_bbs_ids]
+        boxes=np.array(track_bbs_ids,dtype=int)
+        print(np.array(track_bbs_ids,dtype=int))
+
+        # print(boxes)
+        # print(confs)
+        # confs=confs[:,np.newaxis]
+        # print(confs)
+        # print(type(boxes))
+        # print(type(confs))
+        # d=np.append(boxes,confs,axis=1)
+        # print(type(d))
+        # print("d,",d)
+        # features = encoder(img, detections)
+
+        # print("detection_list",detection_list)
+        # """
+        # Suppress overlapping detections
+        # """
+        # nms_max_overlap=0.3
+        
+        # detections=create_detections(boxes,confs)
+        # print(type(detections))
+        # new_detection=[[box,conf] for box,conf in zip(boxes,confs)]
+        # print("new_detection:",new_detection)
+        # bboxes = np.array([d.tlwh for d in detections])
+        # bconfs = np.array([d.confidence for d in detections])
+        # print(bboxes)
+        # print(bconfs)
+        # new_detections=np.array([d.tlwh,d.confidence] for d in detections)
+        # print("new_detections:",new_detections)
+        # """"""""""""""""""""""""""""""""""""""""""""""""""""""""
+        # print("boxes:",boxes)
+        # print("confs:",confs.shape)
+        # print("Detected boxes:",bboxes)
+        # print("And its scores:",bconfs.shape)
+        # """"""""""""""""""""""""""""""""""""""""""""""""""""""""
+        # indices = preprocessing.non_max_suppression(
+        #      bboxes, nms_max_overlap, bconfs)
+        # detections_track = [detections[i] for i in indices]
+        
+        # print("detections_track:",len(detections_track) )
+
+        # boxes_new=np.array([d.tlwh for d in detections])
+        # confs_new=np.array([d.confidence for d in detections])
+        # print(type(detections))
+        # for index in range(len(detections)):
+            # print("Bfter suppression detection-box:",detections[index].tlwh)
+        # Update tracker.
+        # tracker.predict()
+        # tracker.update(detections_track)
+
+        # print(detections)
+        
+        # indices=preprocessing.non_max_suppression(boxes,nms_max_overlap,confs)
+        # print(indices)
+        
+        # print("boxes:",type(boxes))
+        # print("confs:",type(confs))
+        # print("boxes_new:",type(boxes_new))
+        # print("confs_new:",type(confs_new))
+        # for d in detections:
+            # print("Type of d.tlwh:",d.tlwh)
+        # print("element_boxes:",type(confs_new))
+        # print("element_boxes_new:",type(confs_new))
+        
+        
+        # boxes_visualize=np.array([d.tlwh.astype(np.int) for d in detections])
+        
         img = vis.draw_bboxes(img, boxes, confs, clss)
         img = show_fps(img, fps)
         cv2.imshow(WINDOW_NAME, img)
@@ -84,6 +198,36 @@ def loop_and_detect(cam, trt_yolo, conf_th, vis):
     cam.release()
     out.release()
     cv2.destroyAllWindows()
+
+
+"""
+     Create detections for given frame index from the raw detection matrix.
+                                Parameters
+"""
+def create_detections(boxes, confs):
+    """
+    ----------
+    detection_mat : ndarray
+        Matrix of detections. The first 10 columns of the detection matrix are
+        in the standard MOTChallenge detection format. In the remaining columns
+        store the feature vector associated with each detection.
+    frame_idx : int
+        The frame index.
+    min_height : Optional[int]
+        A minimum detection bounding box height. Detections that are smaller
+        than this value are disregarded.
+    Returns
+    -------
+    List[tracker.Detection]
+        Returns detection responses at given frame index.
+    """
+    detection_list=[]
+    for index in range(len(boxes)):
+        # print("bbox:",boxes[index])
+        # print("confidence:",confs[index])
+        detection_list.append(Detection(boxes[index], confs[index],None))
+    return detection_list
+
 
 
 def main():
@@ -126,7 +270,7 @@ def main():
         WINDOW_NAME, 'Camera TensorRT YOLO Demo',
         cam.img_width, cam.img_height)
     vis = BBoxVisualization(cls_dict)
-    loop_and_detect(cam, trt_yolo, conf_th=0.4, vis=vis)
+    loop_and_detect(cam, trt_yolo, conf_th=0.3, vis=vis)
 
     cam.release()
     cv2.destroyAllWindows()

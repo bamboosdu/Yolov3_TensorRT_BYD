@@ -1,3 +1,16 @@
+.
+├── common
+├── deep_sort
+├── plugins
+├── utils
+└── yolo
+
+The deep_sort file contains sort&deep_sort realization.
+The plugins contains files about yolo net.
+The utils contains files for visualization, preprocessing,etc.
+The yolo is the most important one, it explains how to convert darknet weight to tensorRT engin.
+
+
 # NX部署检测模型
 
 ## 步骤
@@ -43,7 +56,7 @@ bash onnx2trt.sh
 python3 trt_yolo.py
 ```
 
-Run on video
+Run on video and now we can switch between kalman filter mode to smooth the results.
 ```
 python3 trt_yolo_with_screen.py --video /home/zq/Videos/20201022.flv -m  yolov3-416
 ```

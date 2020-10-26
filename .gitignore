@@ -4,3 +4,5 @@ yolo/darknet/yolov3-416.trt
 yolo/darknet/yolov3-416.weights
 yolov3-416.*
 *.avi
+result_3.avi
+
