@@ -86,99 +86,38 @@ def loop_and_detect(cam, trt_yolo, conf_th, vis):
     # print("Metric is :",metric)
     # tracker = Tracker(metric)
     # results = []
+    """
+    max_age: Maximum number of frames to keep alive a track without associated detections
+    min_hits: Minimum number of associated detections before track is initialised.
+    iou_threshold: Minimum IOU for match.
+    """
     mot_tracker=Sort(max_age=50, 
-                       min_hits=2,
+                       min_hits=1,
                        iou_threshold=0.3)
     
     while True:
         if cv2.getWindowProperty(WINDOW_NAME, 0) < 0:
             break
         img = cam.read()
-        print(img.shape)#image #size(608,608)
         if img is None:
             break
+
         boxes, confs, clss = trt_yolo.detect(img, conf_th)
-        print("boxes:",boxes)
-        if 0==len(boxes):
-            boxes=[[0,0,0,0]]
-            confs=[0]
+        
         dets=[]
         for i in range(len(boxes)):
             dets.append(np.append(np.asarray(boxes[i],dtype=np.float),confs[i]))
-        dets_array=np.array(dets)
-        # print(dets_array)
-        # print(dets_array.shape)
-        # print(dets_array.ndim)
+        if(len(boxes)>0):
+            dets_array=np.array(dets)
+        else:
+            dets_array=np.empty((0,5))
+
         track_bbs_ids = mot_tracker.update(dets_array)
         print("After pridiction:",track_bbs_ids)
         track_bbs_ids=[track_bb_id[:4] for track_bb_id in track_bbs_ids]
         boxes=np.array(track_bbs_ids,dtype=int)
         print(np.array(track_bbs_ids,dtype=int))
 
-        # print(boxes)
-        # print(confs)
-        # confs=confs[:,np.newaxis]
-        # print(confs)
-        # print(type(boxes))
-        # print(type(confs))
-        # d=np.append(boxes,confs,axis=1)
-        # print(type(d))
-        # print("d,",d)
-        # features = encoder(img, detections)
-
-        # print("detection_list",detection_list)
-        # """
-        # Suppress overlapping detections
-        # """
-        # nms_max_overlap=0.3
-        
-        # detections=create_detections(boxes,confs)
-        # print(type(detections))
-        # new_detection=[[box,conf] for box,conf in zip(boxes,confs)]
-        # print("new_detection:",new_detection)
-        # bboxes = np.array([d.tlwh for d in detections])
-        # bconfs = np.array([d.confidence for d in detections])
-        # print(bboxes)
-        # print(bconfs)
-        # new_detections=np.array([d.tlwh,d.confidence] for d in detections)
-        # print("new_detections:",new_detections)
-        # """"""""""""""""""""""""""""""""""""""""""""""""""""""""
-        # print("boxes:",boxes)
-        # print("confs:",confs.shape)
-        # print("Detected boxes:",bboxes)
-        # print("And its scores:",bconfs.shape)
-        # """"""""""""""""""""""""""""""""""""""""""""""""""""""""
-        # indices = preprocessing.non_max_suppression(
-        #      bboxes, nms_max_overlap, bconfs)
-        # detections_track = [detections[i] for i in indices]
-        
-        # print("detections_track:",len(detections_track) )
-
-        # boxes_new=np.array([d.tlwh for d in detections])
-        # confs_new=np.array([d.confidence for d in detections])
-        # print(type(detections))
-        # for index in range(len(detections)):
-            # print("Bfter suppression detection-box:",detections[index].tlwh)
-        # Update tracker.
-        # tracker.predict()
-        # tracker.update(detections_track)
-
-        # print(detections)
-        
-        # indices=preprocessing.non_max_suppression(boxes,nms_max_overlap,confs)
-        # print(indices)
-        
-        # print("boxes:",type(boxes))
-        # print("confs:",type(confs))
-        # print("boxes_new:",type(boxes_new))
-        # print("confs_new:",type(confs_new))
-        # for d in detections:
-            # print("Type of d.tlwh:",d.tlwh)
-        # print("element_boxes:",type(confs_new))
-        # print("element_boxes_new:",type(confs_new))
-        
-        
-        # boxes_visualize=np.array([d.tlwh.astype(np.int) for d in detections])
         
         img = vis.draw_bboxes(img, boxes, confs, clss)
         img = show_fps(img, fps)
