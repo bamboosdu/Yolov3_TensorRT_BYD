@@ -77,7 +77,7 @@ bash darknet2onnx.sh
 bash onnx2trt.sh
 ```
 
-### 4、奔跑Yolo
+### 4、Run Yolo
 
 ```bash
 python3 trt_yolo.py
