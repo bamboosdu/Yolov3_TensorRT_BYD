@@ -29,7 +29,7 @@
 ├── utils
 └── yolo
 ```
-![yolo&yolo+sort](https://media.giphy.com/media/RUyBeyEVRiQubfNCLd/giphy.gif)
+![yolo&yolo+sort](./sort.gif)
 
 The **deep_sort** file contains sort&deep_sort realization.
 
